@@ -34,12 +34,12 @@ def plot_stock(fig_size, title, plot_data, x_name, y_name):
 
 
 #Get the stock quote
-df = web.DataReader('BTC-USD', data_source = 'yahoo', start = '2016-01-01', end = '2020-04-25')
-'''#print(df)'''
+df = web.DataReader('AAPL', data_source = 'yahoo', start = '2016-01-01', end = '2020-04-25')
+print(df.filter(['previous Close']))
 
 
 #Get the number of rows and columns in the data set
-'''#print(df.shape)'''
+#'''#print(df.shape)'''
 
 #Visualize the closing price history
 fig_size = (16, 8)

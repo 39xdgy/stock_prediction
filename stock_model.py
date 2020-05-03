@@ -16,13 +16,17 @@ class stock_model:
         self.stock_name = stock_name
         self.start_time = training_time_zone[0]
         self.end_time = training_time_zone[1]
+      #  self.pre_close price = web.DataReader(self.stock_name, data_source = 'yahoo', start = self.start_time, end = self.end_time).filter(['Close'])
         self.data = web.DataReader(self.stock_name, data_source = 'yahoo', start = self.start_time, end = self.end_time).filter(['Close'])
         self.dataset = self.data.values
         self.training_data_len = math.ceil(len(self.dataset) * .8)
         self.x_train = []
         self.y_train = []
         self.scaler = MinMaxScaler(feature_range = (0, 1))
+        self.scaled_data = self.scaler.fit_transform(self.dataset)
         self.model = None
+        self.pred_price = 0
+        self.rmse = 0
 
         
     def draw_plot(self):
@@ -47,11 +51,11 @@ class stock_model:
 
     def generate_train_data(self):
         #Scale the data
-        scaled_data = self.scaler.fit_transform(self.dataset)
+        
 
         #create the training data set
         #Create the scaled training data set
-        train_data = scaled_data[0:self.training_data_len, :]
+        train_data = self.scaled_data[0:self.training_data_len, :]
         
         for i in range(60, len(train_data)):
             self.x_train.append(train_data[i-60:i, 0])
@@ -81,22 +85,19 @@ class stock_model:
 
         self.generate_model()
 
-        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = 5)
+        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = 10)
         
 
-
-    #def test_brain()
-
-'''
+    def get_RMSE(self):
 
         #create the testing data set
         #create a new array containing scaled values from index 1543 to 2003
-        test_data = scaled_data[training_data_len - 60: , :]
+        test_data = self.scaled_data[self.training_data_len - 60: , :]
 
         
         #create the datasets x_test and y_test
         x_test = []
-        y_test = dataset[training_data_len:, :]
+        y_test = self.dataset[self.training_data_len:, :]
         for i in range(60, len(test_data)):
             x_test.append(test_data[i-60:i, 0])
 
@@ -108,18 +109,18 @@ class stock_model:
         x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
 
         #Get the models predicted price values
-        predictions = model.predict(x_test)
-        predictions = scaler.inverse_transform(predictions)
+        predictions = self.model.predict(x_test)
+        predictions = self.scaler.inverse_transform(predictions)
 
         #Get the root mean squared error(RMSE)
-        rmse = np.sqrt(np.mean(predictions - y_test) ** 2)
-        print(rmse)
+        self.rmse = np.sqrt(np.mean(predictions - y_test) ** 2)
+        #print(rmse)
 
-
+        
 
         #Plot the data
-        train = data[ : training_data_len]
-        valid = S[training_data_len : ]
+        train = self.data[ : self.training_data_len]
+        valid = self.data[self.training_data_len : ]
         valid['Predictions'] = predictions
 
         #Visualize the data
@@ -134,14 +135,41 @@ class stock_model:
 
         #Show the valid and predicted prices
         #print(valid)
+        
 
+        
+    def use_brain(self):
+        self.get_RMSE()
+        last_60_days = self.data[-60:].values
+        last_60_days_scaled = self.scaler.transform(last_60_days)
+        x_predict = []
+        x_predict.append(last_60_days_scaled)
+        x_predict= np.array(x_predict)
+        x_predict = np.reshape(x_predict, (x_predict.shape[0], x_predict.shape[1], 1))
+        self.pred_price = self.model.predict(x_predict)
+        self.pred_price = self.scaler.inverse_transform(self.pred_price)[0][0]
+        #print(pred_price)
+        print("Predict finish")
 
-'''
+    def create_report(self):
+        self.create_brain()
+        self.use_brain()
+        pred_price_str = "Predicted price: " + str(self.pred_price) + ", "
+        range_str = "Range: +- "+ str(self.rmse) + "."
+        final = self.stock_name + " " + pred_price_str + range_str
+        return final
+
 
 if __name__ == "__main__":
-    AAPL = stock_model('AAPL', ('2012-01-01', '2019-01-01'))
-    #4AAPL.create_brain()
-    AAPL.draw_plot()
+    Stock = stock_model('LYFT', ('2012-01-01', '2020-04-27'))
+    Stock.create_brain()
+    #AAPL.draw_plot()
+    Stock.use_brain()
+    print()
+    print("Predicted price: " , Stock.pred_price, ".")
+    print("Range: +- ", Stock.rmse)
+
+    
 
 
 
