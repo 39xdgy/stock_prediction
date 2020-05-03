@@ -2,71 +2,136 @@ import tkinter as tk
 import tkinter.font as font
 from tkinter import messagebox as msg
 import pandas_datareader as web
+from datetime import date
+from stock_model import stock_model
 
 wn_width = 480
 wn_height = 360
-wn_size = str(wn_width) + "x" + str(wn_height)
+
 
 Add_width = 360
 Add_height = 60
-Add_size = str(Add_width) + "x" + str(Add_height)
+
+class GUI_US:
+
+    def __init__(self):
+        self.wn_width = 480
+        self.wn_height = 360
+        self.Add_width = 360
+        self.Add_height = 60
+        self.finish = False
+
+        stock_list_file = open("stock_list.txt", "r")
+        self.stock_list = stock_list_file.read().split("\n")
+        self.stock_list.remove('')
+        stock_list_file.close()
 
 
-def center(toplevel, width, height):
-    toplevel.update_idletasks()
-    w = toplevel.winfo_screenwidth()
-    h = toplevel.winfo_screenheight()
-    #size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
-    x = (w - width) // 2
-    y = (h - height) // 2
-    '''format = width x height + left_top_width + left_top_height'''
-    toplevel.geometry("{}x{}+{}+{}".format(width, height, x, y))#("%dx%d+%d+%d" % (size + (x, y)))
+        self.wn = tk.Tk()
+        self.Add_wn = tk.Tk()
+        self.Add_wn.withdraw()
+        self.main_screen()
 
 
-def add_stock(wn, Add_wn, Add_txt):
-    try:
-        df = web.DataReader(Add_txt.get(), data_source = 'yahoo')#, start = '2016-01-01', end = '2020-04-25')
-        Add_wn.quit()
-        Add_wn.destroy()
-        msg.showinfo('Success', 'Successfully add stock into the list')
-        wn.update()
-        wn.deiconify()
-    except:
-        msg.showinfo('Error', 'The name does not exist. ')
-
-def Add_clicked(wn):
-    wn.withdraw()
-    Add_wn = tk.Tk()
-    Add_wn.title('Add Stock')
-    center(Add_wn, Add_width, Add_height)
-
-    Add_txt = tk.Entry(Add_wn, width = 30)
-    Add_txt.place(x = 30, y = 15)
-
-    Add_confirm = tk.Button(Add_wn, text = "confirm", height = 1, width = 7, command = lambda: add_stock(wn, Add_wn, Add_txt))
-    Add_confirm.place(x = 260, y = 13)
-
-    Add_wn.mainloop()
+    def update_stock_list(self):
+        stock_list_file = open("stock_list.txt", "w")
+        for stock in self.stock_list:
+            line = stock + "\n"
+            stock_list_file.write(line)
+        stock_list_file.close()
 
 
+    def center(self, toplevel, width, height):
+        toplevel.update_idletasks()
+        w = toplevel.winfo_screenwidth()
+        h = toplevel.winfo_screenheight()
+        x = (w - width) // 2
+        y = (h - height) // 2
+        '''format = width x height + left_top_width + left_top_height'''
+        toplevel.geometry("{}x{}+{}+{}".format(width, height, x, y))
 
-def main_screen():
-
-    wn = tk.Tk()
-    wn.title('Stock Prodection')
-    center(wn, wn_width, wn_height)
-    buttom_font = font.Font(size = 20)
-
-    Add_buttom = tk.Button(wn, text = "Add Stock", height = 2, width = 10, command = lambda: Add_clicked(wn))
-    Add_buttom.place(x = 100, y = 120)
-
-    Run_buttom = tk.Button(wn, text = "Run", height = 2, width = 10)
-    Run_buttom.place(x = 200, y = 120)
-
-    setting_buttom = tk.Button(wn, text = "Setting", height = 2, width = 10)
-    setting_buttom.place(x = 300, y = 120)
-
-    wn.mainloop()
+    def close_add(self):
+        self.wn.deiconify()
+        self.Add_wn.withdraw()
 
 
-main_screen()
+    def close_all(self):
+        self.wn.withdraw()
+        self.Add_wn.destroy()
+        self.wn.destroy()
+        self.wn.quit()
+
+    def main_screen(self):
+        self.wn.title('Stock Prodection')
+        self.center(self.wn, self.wn_width, self.wn_height)
+        buttom_font = font.Font(size = 20)
+
+        Add_buttom = tk.Button(self.wn, text = "Add Stock", height = 2, width = 10, command = self.Add_clicked)
+        Add_buttom.place(x = 100, y = 120)
+
+        Run_buttom = tk.Button(self.wn, text = "Run", height = 2, width = 10, command = self.run_clicked)
+        Run_buttom.place(x = 200, y = 120)
+
+        setting_buttom = tk.Button(self.wn, text = "Setting", height = 2, width = 10)
+        setting_buttom.place(x = 300, y = 120)
+
+        self.wn.protocol("WM_DELETE_WINDOW", self.close_all)
+        self.wn.mainloop()
+
+
+    def run_clicked(self):
+        start_date = "2012-01-01"
+        today = str(date.today())
+        report_file = open("report.txt", "w")
+        self.wn.withdraw()
+        msg.showinfo("Program start", "开始预测")
+        for stock_name in self.stock_list:
+            for i in range(0, 5):
+                if(stock_name[0] != "#"):
+                    Brain = stock_model(stock_name, (start_date, today))
+                    #print(Brain.data)
+                    report_line = Brain.create_report()
+                    report_file.write(report_line)
+                    report_file.write("\n")
+        msg.showinfo('Success', '恭喜你，你要发了！')
+        report_file.close()
+        self.wn.deiconify()
+
+
+    def Add_clicked(self):
+        self.wn.withdraw()
+        self.Add_wn.deiconify()
+        self.Add_wn.title('Add Stock')
+        self.center(self.Add_wn, self.Add_width, self.Add_height)
+
+        Add_txt = tk.Entry(self.Add_wn, width = 30)
+        Add_txt.place(x = 30, y = 15)
+
+        Add_confirm = tk.Button(self.Add_wn, text = "confirm", height = 1, width = 7, command = lambda: self.add_stock(Add_txt))
+        Add_confirm.place(x = 260, y = 13)
+
+        self.Add_wn.protocol("WM_DELETE_WINDOW", self.close_add)
+        self.Add_wn.mainloop()
+
+
+    def add_stock(self, Add_txt):
+        stock_name = str(Add_txt.get()).upper()
+        try:
+            df = web.DataReader(stock_name, data_source = 'yahoo')
+            self.Add_wn.withdraw()
+            #self.Add_wn.destroy()
+            if stock_name not in self.stock_list:
+                self.stock_list.append(stock_name)
+                msg.showinfo('Success', 'Successfully add stock into the list.')
+                self.update_stock_list()
+            else:
+                msg.showinfo('Already exist', 'This stock already exist in the list.')
+        except Exception as e:
+            #print(e)
+            msg.showinfo('Error', 'The name does not exist. ')
+
+        self.wn.update()
+        self.wn.deiconify()
+
+
+x = GUI_US()

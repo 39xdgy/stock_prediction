@@ -28,7 +28,7 @@ class stock_model:
         self.pred_price = 0
         self.rmse = 0
 
-        
+
     def draw_plot(self):
         #Visualize the closing price history
         fig_size = (16, 8)
@@ -51,12 +51,12 @@ class stock_model:
 
     def generate_train_data(self):
         #Scale the data
-        
+
 
         #create the training data set
         #Create the scaled training data set
         train_data = self.scaled_data[0:self.training_data_len, :]
-        
+
         for i in range(60, len(train_data)):
             self.x_train.append(train_data[i-60:i, 0])
             self.y_train.append(train_data[i, 0])
@@ -67,11 +67,11 @@ class stock_model:
 
         #Reshape the data
         self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], self.x_train.shape[1], 1))
-        
+
 
 
     def generate_model(self):
-        
+
         self.model = Sequential()
         self.model.add(LSTM(50, return_sequences = True, input_shape = (self.x_train.shape[1], 1)))
         self.model.add(LSTM(50, return_sequences = False))
@@ -86,7 +86,7 @@ class stock_model:
         self.generate_model()
 
         self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = 10)
-        
+
 
     def get_RMSE(self):
 
@@ -94,7 +94,7 @@ class stock_model:
         #create a new array containing scaled values from index 1543 to 2003
         test_data = self.scaled_data[self.training_data_len - 60: , :]
 
-        
+
         #create the datasets x_test and y_test
         x_test = []
         y_test = self.dataset[self.training_data_len:, :]
@@ -116,7 +116,7 @@ class stock_model:
         self.rmse = np.sqrt(np.mean(predictions - y_test) ** 2)
         #print(rmse)
 
-        
+
 
         #Plot the data
         train = self.data[ : self.training_data_len]
@@ -131,13 +131,13 @@ class stock_model:
         plt.plot(train['Close'])
         plt.plot(valid[['Close', 'Predictions']])
         plt.legend(['Train', 'Val', 'Predictions'], loc = 'lower right' )
-        plt.show()
+        #plt.show()
 
         #Show the valid and predicted prices
         #print(valid)
-        
 
-        
+
+
     def use_brain(self):
         self.get_RMSE()
         last_60_days = self.data[-60:].values
@@ -168,11 +168,3 @@ if __name__ == "__main__":
     print()
     print("Predicted price: " , Stock.pred_price, ".")
     print("Range: +- ", Stock.rmse)
-
-    
-
-
-
-
-
-    
