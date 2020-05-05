@@ -27,7 +27,8 @@ class stock_model:
         self.model = None
         self.pred_price = 0
         self.rmse = 0
-
+        self.len_train_data = 0
+        self.epoch = 0
 
     def draw_plot(self):
         #Visualize the closing price history
@@ -61,7 +62,9 @@ class stock_model:
             self.x_train.append(train_data[i-60:i, 0])
             self.y_train.append(train_data[i, 0])
 
-
+        self.len_train_data = len(self.x_train)
+        self.epoch = 6000 // self.len_train_data
+        if (self.epoch > 15): self.epoch = 15
         #convert the x_train and y_train to numpy arrays
         self.x_train, self.y_train = np.array(self.x_train), np.array(self.y_train)
 
@@ -85,7 +88,7 @@ class stock_model:
 
         self.generate_model()
 
-        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = 10)
+        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = self.epoch)
 
 
     def get_RMSE(self):

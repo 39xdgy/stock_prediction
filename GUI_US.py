@@ -5,13 +5,6 @@ import pandas_datareader as web
 from datetime import date
 from stock_model import stock_model
 
-wn_width = 480
-wn_height = 360
-
-
-Add_width = 360
-Add_height = 60
-
 class GUI_US:
 
     def __init__(self):
@@ -25,7 +18,6 @@ class GUI_US:
         self.stock_list = stock_list_file.read().split("\n")
         self.stock_list.remove('')
         stock_list_file.close()
-
 
         self.wn = tk.Tk()
         self.Add_wn = tk.Tk()
@@ -66,34 +58,56 @@ class GUI_US:
         self.center(self.wn, self.wn_width, self.wn_height)
         buttom_font = font.Font(size = 20)
 
-        Add_buttom = tk.Button(self.wn, text = "Add Stock", height = 2, width = 10, command = self.Add_clicked)
-        Add_buttom.place(x = 100, y = 120)
 
-        Run_buttom = tk.Button(self.wn, text = "Run", height = 2, width = 10, command = self.run_clicked)
-        Run_buttom.place(x = 200, y = 120)
+        temp_x = 1
+        temp_y = 1
+        dict_stock = {}
+        for stock_name in self.stock_list:
+
+            dict_stock[stock_name] = temp_var = tk.IntVar()
+            temp_checkbox = tk.Checkbutton(self.wn, text = stock_name, variable = temp_var, onvalue = 1, offvalue = 0)
+            #pos = str(temp_x)+"x"+str(temp_y)
+
+            temp_checkbox.grid(column = temp_x, row = temp_y, padx=10, pady=10)
+            if(temp_x == 6):
+                temp_x = 1
+                temp_y += 1
+            else:
+                temp_x += 1
+
+
+        Add_buttom = tk.Button(self.wn, text = "Add Stock", height = 2, width = 10, command = self.Add_clicked)
+        Add_buttom.place(x = 100, y = 280)
+
+        Run_buttom = tk.Button(self.wn, text = "Run", height = 2, width = 10, command = lambda: self.run_clicked(dict_stock))
+        Run_buttom.place(x = 200, y = 280)
 
         setting_buttom = tk.Button(self.wn, text = "Setting", height = 2, width = 10)
-        setting_buttom.place(x = 300, y = 120)
+        setting_buttom.place(x = 300, y = 280)
 
         self.wn.protocol("WM_DELETE_WINDOW", self.close_all)
         self.wn.mainloop()
 
 
-    def run_clicked(self):
+    def run_clicked(self, dict_stock):
         start_date = "2012-01-01"
         today = str(date.today())
         report_file = open("report.txt", "w")
         self.wn.withdraw()
         msg.showinfo("Program start", "开始预测")
         for stock_name in self.stock_list:
-            for i in range(0, 5):
-                if(stock_name[0] != "#"):
+            if(dict_stock[stock_name].get() == 1):
+                print("now running: " + stock_name)
+                for i in range(0, 5):
                     Brain = stock_model(stock_name, (start_date, today))
                     #print(Brain.data)
                     report_line = Brain.create_report()
                     report_file.write(report_line)
                     report_file.write("\n")
+                report_file.write('\n')
+
         msg.showinfo('Success', '恭喜你，你要发了！')
+
         report_file.close()
         self.wn.deiconify()
 
