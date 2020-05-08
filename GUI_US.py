@@ -12,16 +12,21 @@ class GUI_US:
         self.wn_height = 360
         self.Add_width = 360
         self.Add_height = 60
-        self.finish = False
 
+        self.finish = False
         stock_list_file = open("stock_list.txt", "r")
         self.stock_list = stock_list_file.read().split("\n")
         self.stock_list.remove('')
         stock_list_file.close()
-
+        self.dict_stock = {}
         self.wn = tk.Tk()
         self.Add_wn = tk.Tk()
         self.Add_wn.withdraw()
+
+        self.select_all_var = tk.IntVar()
+        self.clear_var = tk.IntVar()
+        #self.draw_checkbox()
+        self.report_data = {}
         self.main_screen()
 
 
@@ -31,6 +36,7 @@ class GUI_US:
             line = stock + "\n"
             stock_list_file.write(line)
         stock_list_file.close()
+        self.draw_checkbox()
 
 
     def center(self, toplevel, width, height):
@@ -53,62 +59,126 @@ class GUI_US:
         self.wn.destroy()
         self.wn.quit()
 
+    def draw_checkbox(self):
+        checkbox_x = 1
+        checkbox_y = 2
+        for stock_name in self.stock_list:
+            if stock_name not in self.dict_stock:
+                temp_var = tk.IntVar()
+                self.dict_stock[stock_name] = (tk.Checkbutton(self.wn, text = stock_name, variable = temp_var), temp_var)
+                #temp_checkbox = tk.Checkbutton(self.wn, text = stock_name, variable = self.dict_stock[stock_name])
+            #pos = str(temp_x)+"x"+str(temp_y)
+
+                self.dict_stock[stock_name][0].grid(column = checkbox_x, row = checkbox_y, padx=10, pady=10)
+                if(checkbox_x == 6):
+                    checkbox_x = 1
+                    checkbox_y += 1
+                else:
+                    checkbox_x += 1
+            #elif self.select_all.variable == 1:
+
+
+    def select_all_checked(self):
+        for box in self.dict_stock:
+            if self.select_all_var.get() == 1:
+                self.dict_stock[box][0].select()
+            else:
+                self.dict_stock[box][0].deselect()
+
+    def clear_checked(self):
+        for box in self.dict_stock:
+            self.dict_stock[box][0].deselect()
+
     def main_screen(self):
         self.wn.title('Stock Prodection')
         self.center(self.wn, self.wn_width, self.wn_height)
         buttom_font = font.Font(size = 20)
 
 
-        temp_x = 1
-        temp_y = 1
-        dict_stock = {}
-        for stock_name in self.stock_list:
+        self.draw_checkbox()
 
-            dict_stock[stock_name] = temp_var = tk.IntVar()
-            temp_checkbox = tk.Checkbutton(self.wn, text = stock_name, variable = temp_var, onvalue = 1, offvalue = 0)
-            #pos = str(temp_x)+"x"+str(temp_y)
 
-            temp_checkbox.grid(column = temp_x, row = temp_y, padx=10, pady=10)
-            if(temp_x == 6):
-                temp_x = 1
-                temp_y += 1
-            else:
-                temp_x += 1
+        select_all = tk.Checkbutton(self.wn, text = "select all", variable = self.select_all_var, onvalue = 1, offvalue = 0, command = self.select_all_checked)
+        clear = tk.Checkbutton(self.wn, text = "clear", variable = self.clear_var, onvalue = 1, offvalue = 0, command = self.clear_checked)
+        select_all.grid(sticky = "n", column = 1, row = 1)
+        clear.grid(sticky = "n", column = 2, row = 1)
 
 
         Add_buttom = tk.Button(self.wn, text = "Add Stock", height = 2, width = 10, command = self.Add_clicked)
-        Add_buttom.place(x = 100, y = 280)
+        Add_buttom.place(x = 50, y = 280)
 
-        Run_buttom = tk.Button(self.wn, text = "Run", height = 2, width = 10, command = lambda: self.run_clicked(dict_stock))
-        Run_buttom.place(x = 200, y = 280)
+        Run_buttom = tk.Button(self.wn, text = "Run", height = 2, width = 10, command = self.run_clicked)
+        Run_buttom.place(x = 150, y = 280)
+
+        prodect_buttom = tk.Button(self.wn, text = "Prodect", height = 2, width = 10, command = self.prodect_clicked)
+        prodect_buttom.place(x = 250, y = 280)
 
         setting_buttom = tk.Button(self.wn, text = "Setting", height = 2, width = 10)
-        setting_buttom.place(x = 300, y = 280)
+        setting_buttom.place(x = 350, y = 280)
+
 
         self.wn.protocol("WM_DELETE_WINDOW", self.close_all)
         self.wn.mainloop()
 
 
-    def run_clicked(self, dict_stock):
+    def prodect_clicked(self):
+        today = str(date.today())
+        report_file = open("report.txt", 'w')
+        for stock in self.report_data:
+            #print(stock)
+            predict_data = self.report_data[stock]
+            avg = 0
+            rng_avg = 0
+            lease_avg = 0
+            max_avg = 0
+            for i in predict_data:
+                avg += i[0]
+                rng_avg += i[1]
+                lease_avg += (i[0]-i[1])
+                max_avg += (i[0]+i[1])
+            avg = str(avg/5)
+            rng_avg = str(rng_avg/5)
+            lease_avg = str(lease_avg/5)
+            max_avg = str(max_avg/5)
+            line = stock + "\n\tavg: " + avg + "\n\tRange_avg: " + rng_avg + "\n\tlease_avg: " + lease_avg + "\n\tmax_avg: " + max_avg + "\n"
+            report_file.write(line)
+            report_file.write("\n")
+        report_file.close()
+
+
+
+
+
+    def run_clicked(self):
         start_date = "2012-01-01"
         today = str(date.today())
-        report_file = open("report.txt", "w")
+        log_file = open("log.txt", "w")
         self.wn.withdraw()
         msg.showinfo("Program start", "开始预测")
         for stock_name in self.stock_list:
-            if(dict_stock[stock_name].get() == 1):
+            if(self.dict_stock[stock_name][1].get() == 1):
                 print("now running: " + stock_name)
+                temp_report_data = []
                 for i in range(0, 5):
                     Brain = stock_model(stock_name, (start_date, today))
                     #print(Brain.data)
+                    Brain.create_brain()
+                    while Brain.rmse >= 5:
+                        print("rmse大于5， 重新训练")
+                        Brain = stock_model(stock_name, (start_date, today))
+                        Brain.create_brain()
+                    Brain.use_brain()
                     report_line = Brain.create_report()
-                    report_file.write(report_line)
-                    report_file.write("\n")
-                report_file.write('\n')
+                    log_file.write(report_line)
+                    log_file.write("\n")
+                    temp_report_data.append((Brain.pred_price, Brain.rmse))
+                log_file.write('\n')
+                self.report_data[stock_name] = tuple(temp_report_data)
 
-        msg.showinfo('Success', '恭喜你，你要发了！')
+        msg.showinfo('Success', 'Your are going to be rich. ')
 
-        report_file.close()
+        log_file.close()
+        #print(self.report_data)
         self.wn.deiconify()
 
 

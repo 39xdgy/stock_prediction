@@ -89,6 +89,7 @@ class stock_model:
         self.generate_model()
 
         self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = self.epoch)
+        self.get_RMSE()
 
 
     def get_RMSE(self):
@@ -120,7 +121,7 @@ class stock_model:
         #print(rmse)
 
 
-
+        '''
         #Plot the data
         train = self.data[ : self.training_data_len]
         valid = self.data[self.training_data_len : ]
@@ -135,14 +136,13 @@ class stock_model:
         plt.plot(valid[['Close', 'Predictions']])
         plt.legend(['Train', 'Val', 'Predictions'], loc = 'lower right' )
         #plt.show()
-
+        '''
         #Show the valid and predicted prices
         #print(valid)
 
 
 
     def use_brain(self):
-        self.get_RMSE()
         last_60_days = self.data[-60:].values
         last_60_days_scaled = self.scaler.transform(last_60_days)
         x_predict = []
@@ -155,8 +155,6 @@ class stock_model:
         print("Predict finish")
 
     def create_report(self):
-        self.create_brain()
-        self.use_brain()
         pred_price_str = "Predicted price: " + str(self.pred_price) + ", "
         range_str = "Range: +- "+ str(self.rmse) + "."
         final = self.stock_name + " " + pred_price_str + range_str
