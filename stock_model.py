@@ -7,6 +7,7 @@ from keras.models import Sequential
 from keras.layers import Dense, LSTM
 import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
+from datetime import date
 
 
 
@@ -16,14 +17,19 @@ class stock_model:
         self.stock_name = stock_name
         self.start_time = training_time_zone[0]
         self.end_time = training_time_zone[1]
-      #  self.pre_close price = web.DataReader(self.stock_name, data_source = 'yahoo', start = self.start_time, end = self.end_time).filter(['Close'])
-        self.data = web.DataReader(self.stock_name, data_source = 'yahoo', start = self.start_time, end = self.end_time).filter(['Close'])
+        self.all_data = web.DataReader(self.stock_name, data_source = 'yahoo', start = self.start_time, end = self.end_time)
+        #print(self.all_data)
+        self.data = self.all_data.filter(['High', 'Low', 'Open', 'Close'])#, 'Volume'])
+        de_scale_data = self.all_data.filter(['Close'])
         self.dataset = self.data.values
+        de_scale_data = de_scale_data.values
         self.training_data_len = math.ceil(len(self.dataset) * .8)
         self.x_train = []
         self.y_train = []
         self.scaler = MinMaxScaler(feature_range = (0, 1))
+        self.de_scaler = MinMaxScaler(feature_range = (0, 1))
         self.scaled_data = self.scaler.fit_transform(self.dataset)
+        __ = self.de_scaler.fit_transform(de_scale_data)
         self.model = None
         self.pred_price = 0
         self.rmse = 0
@@ -111,14 +117,14 @@ class stock_model:
 
         #Reshape data
         x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
-
+        #print("x_test shape is: ", x_test.shape)
         #Get the models predicted price values
         predictions = self.model.predict(x_test)
-        predictions = self.scaler.inverse_transform(predictions)
+        predictions = self.de_scaler.inverse_transform(predictions)
 
         #Get the root mean squared error(RMSE)
         self.rmse = np.sqrt(np.mean(predictions - y_test) ** 2)
-        #print(rmse)
+        print(self.rmse)
 
 
         '''
@@ -147,10 +153,11 @@ class stock_model:
         last_60_days_scaled = self.scaler.transform(last_60_days)
         x_predict = []
         x_predict.append(last_60_days_scaled)
-        x_predict= np.array(x_predict)
-        x_predict = np.reshape(x_predict, (x_predict.shape[0], x_predict.shape[1], 1))
+        x_predict = np.array(x_predict)
+        x_predict = np.reshape(x_predict, (4, x_predict.shape[1], 1))
+        #print("x_predict shape is :", x_predict.shape)
         self.pred_price = self.model.predict(x_predict)
-        self.pred_price = self.scaler.inverse_transform(self.pred_price)[0][0]
+        self.pred_price = self.de_scaler.inverse_transform(self.pred_price)[0][0]
         #print(pred_price)
         print("Predict finish")
 
@@ -162,10 +169,6 @@ class stock_model:
 
 
 if __name__ == "__main__":
-    Stock = stock_model('LYFT', ('2012-01-01', '2020-04-27'))
-    Stock.create_brain()
-    #AAPL.draw_plot()
-    Stock.use_brain()
-    print()
-    print("Predicted price: " , Stock.pred_price, ".")
-    print("Range: +- ", Stock.rmse)
+    x = stock_model('AAPL', ('2012-01-01', '2020-05-20'))
+    x.create_brain()
+    x.use_brain()

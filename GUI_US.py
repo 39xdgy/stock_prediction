@@ -123,10 +123,13 @@ class GUI_US:
 
     def prodect_clicked(self):
         today = str(date.today())
-        report_file = open("report.txt", 'w')
+        file_name = today + "_report.txt"
+        report_file = open(file_name, 'w')
         for stock in self.report_data:
             #print(stock)
             predict_data = self.report_data[stock]
+            data_today = web.DataReader(stock, data_source = 'yahoo', start = today, end = today).filter(['Close'])
+            today_close = str(data_today['Close'][0])
             avg = 0
             rng_avg = 0
             lease_avg = 0
@@ -140,7 +143,7 @@ class GUI_US:
             rng_avg = str(rng_avg/5)
             lease_avg = str(lease_avg/5)
             max_avg = str(max_avg/5)
-            line = stock + "\n\tavg: " + avg + "\n\tRange_avg: " + rng_avg + "\n\tlease_avg: " + lease_avg + "\n\tmax_avg: " + max_avg + "\n"
+            line = stock + ": " + today_close + "\n\tavg: " + avg + "\n\tRange_avg: " + rng_avg + "\n\tlease_avg: " + lease_avg + "\n\tmax_avg: " + max_avg + "\n"
             report_file.write(line)
             report_file.write("\n")
         report_file.close()
@@ -152,7 +155,8 @@ class GUI_US:
     def run_clicked(self):
         start_date = "2012-01-01"
         today = str(date.today())
-        log_file = open("log.txt", "w")
+        file_name = today + "_log.txt"
+        log_file = open(file_name, "w")
         self.wn.withdraw()
         msg.showinfo("Program start", "开始预测")
         for stock_name in self.stock_list:
@@ -164,7 +168,7 @@ class GUI_US:
                     #print(Brain.data)
                     Brain.create_brain()
                     while Brain.rmse >= 5:
-                        print("rmse大于5， 重新训练")
+                        print("rmse大于5， 重新训练:", Brain.rmse)
                         Brain = stock_model(stock_name, (start_date, today))
                         Brain.create_brain()
                     Brain.use_brain()

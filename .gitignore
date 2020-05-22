@@ -1,5 +1,2 @@
-report.txt
-stock_list.txt
-command.txt
-log.txt
+*.txt
 __pycache__/
