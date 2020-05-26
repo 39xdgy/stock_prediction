@@ -19,7 +19,7 @@ class stock_model:
         self.end_time = training_time_zone[1]
         self.all_data = web.DataReader(self.stock_name, data_source = 'yahoo', start = self.start_time, end = self.end_time)
         #print(self.all_data)
-        self.data = self.all_data.filter(['High', 'Low', 'Open', 'Close'])#, 'Volume'])
+        self.data = self.all_data.filter(['Close'])#['High', 'Low', 'Open', 'Close'])#, 'Volume'])
         de_scale_data = self.all_data.filter(['Close'])
         self.dataset = self.data.values
         de_scale_data = de_scale_data.values
@@ -154,7 +154,7 @@ class stock_model:
         x_predict = []
         x_predict.append(last_60_days_scaled)
         x_predict = np.array(x_predict)
-        x_predict = np.reshape(x_predict, (4, x_predict.shape[1], 1))
+        x_predict = np.reshape(x_predict, (1, x_predict.shape[1], 1))
         #print("x_predict shape is :", x_predict.shape)
         self.pred_price = self.model.predict(x_predict)
         self.pred_price = self.de_scaler.inverse_transform(self.pred_price)[0][0]

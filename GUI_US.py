@@ -13,6 +13,7 @@ class GUI_US:
         self.Add_width = 360
         self.Add_height = 60
 
+        self.today = str(date.today())
         self.finish = False
         stock_list_file = open("stock_list.txt", "r")
         self.stock_list = stock_list_file.read().split("\n")
@@ -116,19 +117,21 @@ class GUI_US:
         setting_buttom = tk.Button(self.wn, text = "Setting", height = 2, width = 10)
         setting_buttom.place(x = 350, y = 280)
 
+        debug_buttom = tk.Button(self.wn, text = "debug", height = 1, width = 5, command = self.debug_clicked)
+        debug_buttom.place(x = 400, y = 400)
+
 
         self.wn.protocol("WM_DELETE_WINDOW", self.close_all)
         self.wn.mainloop()
 
 
     def prodect_clicked(self):
-        today = str(date.today())
-        file_name = today + "_report.txt"
+        file_name = self.today + "_report.txt"
         report_file = open(file_name, 'w')
         for stock in self.report_data:
             #print(stock)
             predict_data = self.report_data[stock]
-            data_today = web.DataReader(stock, data_source = 'yahoo', start = today, end = today).filter(['Close'])
+            data_today = web.DataReader(stock, data_source = 'yahoo', start = self.today, end = self.today).filter(['Close'])
             today_close = str(data_today['Close'][0])
             avg = 0
             rng_avg = 0
@@ -154,8 +157,7 @@ class GUI_US:
 
     def run_clicked(self):
         start_date = "2012-01-01"
-        today = str(date.today())
-        file_name = today + "_log.txt"
+        file_name = self.today + "_log.txt"
         log_file = open(file_name, "w")
         self.wn.withdraw()
         msg.showinfo("Program start", "开始预测")
@@ -164,12 +166,12 @@ class GUI_US:
                 print("now running: " + stock_name)
                 temp_report_data = []
                 for i in range(0, 5):
-                    Brain = stock_model(stock_name, (start_date, today))
+                    Brain = stock_model(stock_name, (start_date, self.today))
                     #print(Brain.data)
                     Brain.create_brain()
                     while Brain.rmse >= 5:
                         print("rmse大于5， 重新训练:", Brain.rmse)
-                        Brain = stock_model(stock_name, (start_date, today))
+                        Brain = stock_model(stock_name, (start_date, self.today))
                         Brain.create_brain()
                     Brain.use_brain()
                     report_line = Brain.create_report()
@@ -200,6 +202,33 @@ class GUI_US:
 
         self.Add_wn.protocol("WM_DELETE_WINDOW", self.close_add)
         self.Add_wn.mainloop()
+
+
+    def debug_clicked(self):
+        if self.today == str(date.today()):
+            self.wn.withdraw()
+            debug_wn = tk.Tk()
+            debug_wn.title('debug window')
+            self.center(debug_wn, 360, 60)
+            debug_day = tk.Entry(debug_wn, width = 30)
+            debug_day.place(x = 30, y = 15)
+
+            debug_confirm = tk.Button(debug_wn, text = "confirm", height = 1, width = 7, command = lambda: self.debug_done(debug_wn, debug_day))
+            debug_confirm.place(x = 260, y = 13)
+
+            debug_wn.mainloop()
+        else:
+            self.today = str(date.today())
+            msg.showinfo("debug info", "Exit debug mode")
+            self.wn.title('Stock Prodection')
+
+    def debug_done(self, debug_wn, debug_day):
+        self.today = debug_day.get()
+        msg.showinfo("debug info", "Enter debug mode")
+        debug_wn.destroy()
+        debug_wn.quit()
+        self.wn.title('Stock Prodection(debug mode)')
+        self.wn.deiconify()
 
 
     def add_stock(self, Add_txt):
