@@ -8,6 +8,7 @@ from keras.layers import Dense, LSTM
 import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 from datetime import date
+import time
 
 
 
@@ -58,8 +59,6 @@ class stock_model_latest:
 
     def generate_train_data(self):
         #Scale the data
-
-
         #create the training data set
         #Create the scaled training data set
         train_data = self.scaled_data[0:self.training_data_len, :]
@@ -89,12 +88,12 @@ class stock_model_latest:
 
         self.model.compile(optimizer = 'adam', loss = 'mean_squared_error', metrics = ['accuracy'])
 
-    def create_brain(self, num_of_epoch):
+    def create_brain(self):
         self.generate_train_data()
 
         self.generate_model()
 
-        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = num_of_epoch)#self.epoch)
+        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = 20)#self.epoch)
         #self.get_RMSE()
 
 
@@ -162,17 +161,20 @@ class stock_model_latest:
         print("Predict finish")
 
     def create_report(self):
-        pred_price_str = "Predicted price: " + str(self.pred_price) + ", "
-        range_str = "Range: +- "+ str(self.rmse) + "."
-        final = self.stock_name + " " + pred_price_str + range_str
+        pred_price_str = "Predicted price: " + str(self.pred_price) + "."
+        #range_str = "Range: +- "+ str(self.rmse) + "."
+        final = self.stock_name + " " + pred_price_str# + range_str
         return final
+
+
 
 
 if __name__ == "__main__":
     calculate = []
+    start = time.time()
     for i in range(0, 10):
-        x = stock_model_latest('GPRO', ('2018-01-01', '2020-05-28'))
-        x.create_brain(20)
+        x = stock_model_latest('LYFT', ('2018-01-01', '2020-05-28'))
+        x.create_brain()
         x.use_brain()
         calculate.append(x.pred_price)
 
@@ -182,3 +184,5 @@ if __name__ == "__main__":
     calculate.remove(min(calculate))
 
     print(sum(calculate)/6)
+    total_min = str((time.time() - start)/60)
+    print("used that many min", total_min)

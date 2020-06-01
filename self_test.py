@@ -20,3 +20,9 @@ x = [(0.0063, 328.41888),
      (0.0011, 308.03464)]
 
 print((321.62064+316.26123+315.79642+317.00595+326.255+319.47345)/6)
+
+import pandas_datareader as web
+from datetime import date
+x = web.DataReader("F", data_source = 'yahoo', start = "2020-05-31", end = date.today())
+print(x)
+print(str(date.today()) == str(x.index[0])[:10])

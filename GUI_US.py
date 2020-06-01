@@ -3,7 +3,7 @@ import tkinter.font as font
 from tkinter import messagebox as msg
 import pandas_datareader as web
 from datetime import date
-from stock_model import stock_model
+from stock_model_latest import stock_model_latest as sml
 
 class GUI_US:
 
@@ -31,6 +31,8 @@ class GUI_US:
         self.report_data = {}
         self.debug_flag = False
         self.pred_day = ''
+
+
 
         self.draw_wn()
         self.draw_add_wn()
@@ -100,7 +102,9 @@ class GUI_US:
         for box in self.dict_stock:
             self.dict_stock[box][0].deselect()
 
-
+    def is_today_out(self):
+        temp = web.DataReader("F", data_source = 'yahoo', start = "2020-05-31", end = date.today())
+        return (str(date.today()) == str(temp.index[0])[:10])
 
     def draw_wn(self):
         self.wn.title('Stock Prodection')
@@ -115,6 +119,13 @@ class GUI_US:
         clear = tk.Checkbutton(self.wn, text = "clear", variable = self.clear_var, onvalue = 1, offvalue = 0, command = self.clear_checked)
         select_all.grid(sticky = "n", column = 1, row = 1)
         clear.grid(sticky = "n", column = 2, row = 1)
+
+        today_update = ''
+        if self.is_today_out(): today_update = tk.Label(self.wn, text = 'Can predict next day.', fg = 'Green')
+        else: today_update = tk.Label(self.wn, text = 'Please keep waiting.', fg = 'Red')
+
+        today_update.place(x = 350, y = 7)
+
 
 
         Add_buttom = tk.Button(self.wn, text = "Add Stock", height = 2, width = 10, command = self.Add_clicked)
@@ -198,54 +209,51 @@ class GUI_US:
         report_file = open(file_name, 'w')
         for stock in self.report_data:
             predict_data = self.report_data[stock]
-            data_today = web.DataReader(stock, data_source = 'yahoo', start = "2020-01-01", end = self.today).filter(['Close'])
+            data_today = web.DataReader(stock, data_source = 'yahoo', start = "2020-05-01", end = self.today).filter(['Close'])
             today_close = str(data_today['Close'][-1])
-            avg = 0
-            rng_avg = 0
-            lease_avg = 0
-            max_avg = 0
-            for i in predict_data:
-                avg += i[0]
-                rng_avg += i[1]
-                lease_avg += (i[0]-i[1])
-                max_avg += (i[0]+i[1])
-            avg = str(avg/5)
-            rng_avg = str(rng_avg/5)
-            lease_avg = str(lease_avg/5)
-            max_avg = str(max_avg/5)
-            line = stock + ": " + today_close + "\n\tavg: " + avg + "\n\tRange_avg: " + rng_avg + "\n\tlease_avg: " + lease_avg + "\n\tmax_avg: " + max_avg + "\n"
+            avg = self.avg_output(predict_data)
+            line = stock + ": " + today_close + "\n\tavg: " + str(avg) + "\n" # + "\n\tRange_avg: " + rng_avg + "\n\tlease_avg: " + lease_avg + "\n\tmax_avg: " + max_avg + "\n"
             report_file.write(line)
             report_file.write("\n")
         report_file.close()
 
 
 
+    def avg_output(self, predict_data):
+        predict_data.remove(max(predict_data))
+        predict_data.remove(max(predict_data))
+        predict_data.remove(min(predict_data))
+        predict_data.remove(min(predict_data))
 
+        return (sum(predict_data)/6)
 
     def run_clicked(self):
-        start_date = "2015-01-01"
+        self.wn.withdraw()
+        start_date = "2018-01-01"
         file_name = self.today + "_log.txt"
         log_file = open(file_name, "w")
-        self.wn.withdraw()
+
         msg.showinfo("Program start", "开始预测")
         for stock_name in self.stock_list:
             if(self.dict_stock[stock_name][1].get() == 1):
                 print("now running: " + stock_name)
                 temp_report_data = []
-                for i in range(0, 5):
-                    Brain = stock_model(stock_name, (start_date, self.today))
+                for i in range(0, 10):
+                    Brain = sml(stock_name, (start_date, self.today))
                     Brain.create_brain()
+                    '''
                     while Brain.rmse >= 5:
                         print("rmse大于5， 重新训练:", Brain.rmse)
                         Brain = stock_model(stock_name, (start_date, self.today))
                         Brain.create_brain()
+                    '''
                     Brain.use_brain()
                     report_line = Brain.create_report()
                     log_file.write(report_line)
                     log_file.write("\n")
-                    temp_report_data.append((Brain.pred_price, Brain.rmse))
+                    temp_report_data.append(Brain.pred_price)
                 log_file.write('\n')
-                self.report_data[stock_name] = tuple(temp_report_data)
+                self.report_data[stock_name] = temp_report_data
 
         msg.showinfo('Success', 'Your are going to be rich. ')
 

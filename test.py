@@ -75,7 +75,7 @@ def plot_stock(fig_size, title, plot_data, x_name, y_name):
 
 
 #Get the stock quote
-df = web.DataReader('AAPL', data_source = 'yahoo', start = '2016-01-01', end = '2020-05-01')
+df = web.DataReader('AAPL', data_source = 'yahoo', start = '2016-01-01', end = date.today())
 #print(df.filter)
 
 
@@ -96,7 +96,7 @@ data = df.filter(['High', 'Close'])
 output_scale_data = df.filter(['Close'])
 data_China = Chinese_data()
 #print(data_US)
-#print(data)
+print(data)
 #print(data_China.shape)
 #print(data.shape)
 #convert the dataframe to a numpy array
