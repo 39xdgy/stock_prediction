@@ -21,13 +21,21 @@ class GUI_US:
         stock_list_file.close()
         self.dict_stock = {}
         self.wn = tk.Tk()
+        self.wn.withdraw()
         self.Add_wn = tk.Tk()
         self.Add_wn.withdraw()
-
+        self.debug_wn = tk.Tk()
+        self.debug_wn.withdraw()
         self.select_all_var = tk.IntVar()
         self.clear_var = tk.IntVar()
-        #self.draw_checkbox()
         self.report_data = {}
+        self.debug_flag = False
+        self.pred_day = ''
+
+        self.draw_wn()
+        self.draw_add_wn()
+        self.draw_debug_wn()
+
         self.main_screen()
 
 
@@ -38,7 +46,6 @@ class GUI_US:
             stock_list_file.write(line)
         stock_list_file.close()
         self.draw_checkbox()
-
 
     def center(self, toplevel, width, height):
         toplevel.update_idletasks()
@@ -53,11 +60,15 @@ class GUI_US:
         self.wn.deiconify()
         self.Add_wn.withdraw()
 
+    def close_debug(self):
+        self.wn.deiconify()
+        self.debug_wn.withdraw()
 
     def close_all(self):
         self.wn.withdraw()
         self.Add_wn.destroy()
         self.wn.destroy()
+        self.debug_wn.destroy()
         self.wn.quit()
 
     def draw_checkbox(self):
@@ -67,30 +78,31 @@ class GUI_US:
             if stock_name not in self.dict_stock:
                 temp_var = tk.IntVar()
                 self.dict_stock[stock_name] = (tk.Checkbutton(self.wn, text = stock_name, variable = temp_var), temp_var)
-                #temp_checkbox = tk.Checkbutton(self.wn, text = stock_name, variable = self.dict_stock[stock_name])
-            #pos = str(temp_x)+"x"+str(temp_y)
-
                 self.dict_stock[stock_name][0].grid(column = checkbox_x, row = checkbox_y, padx=10, pady=10)
-                if(checkbox_x == 6):
-                    checkbox_x = 1
-                    checkbox_y += 1
-                else:
-                    checkbox_x += 1
-            #elif self.select_all.variable == 1:
+            if(checkbox_x == 6):
+                checkbox_x = 1
+                checkbox_y += 1
+            else:
+                checkbox_x += 1
 
 
     def select_all_checked(self):
+        print(self.select_all_var.get())
+
         for box in self.dict_stock:
             if self.select_all_var.get() == 1:
                 self.dict_stock[box][0].select()
             else:
                 self.dict_stock[box][0].deselect()
 
+
     def clear_checked(self):
         for box in self.dict_stock:
             self.dict_stock[box][0].deselect()
 
-    def main_screen(self):
+
+
+    def draw_wn(self):
         self.wn.title('Stock Prodection')
         self.center(self.wn, self.wn_width, self.wn_height)
         buttom_font = font.Font(size = 20)
@@ -114,14 +126,70 @@ class GUI_US:
         prodect_buttom = tk.Button(self.wn, text = "Prodect", height = 2, width = 10, command = self.prodect_clicked)
         prodect_buttom.place(x = 250, y = 280)
 
-        setting_buttom = tk.Button(self.wn, text = "Setting", height = 2, width = 10)
+        setting_buttom = tk.Button(self.wn, text = 'debug', height = 2, width = 10, command = self.debug_clicked)#"Setting", height = 2, width = 10)
         setting_buttom.place(x = 350, y = 280)
 
         debug_buttom = tk.Button(self.wn, text = "debug", height = 1, width = 5, command = self.debug_clicked)
         debug_buttom.place(x = 400, y = 400)
 
 
+
+    def draw_add_wn(self):
+        self.Add_wn.title('Add Stock')
+        self.center(self.Add_wn, self.Add_width, self.Add_height)
+
+        Add_txt = tk.Entry(self.Add_wn, width = 30)
+        Add_txt.place(x = 30, y = 15)
+
+        Add_confirm = tk.Button(self.Add_wn, text = "confirm", height = 1, width = 7, command = lambda: self.add_stock(Add_txt))
+        Add_confirm.place(x = 260, y = 13)
+
+        self.Add_wn.protocol("WM_DELETE_WINDOW", self.close_add)
+
+
+
+
+    def draw_debug_wn(self):
+        self.debug_wn.title('debug window')
+        self.center(self.debug_wn, self.wn_width, self.wn_height)
+
+        debug_on_label = tk.Label(self.debug_wn, text = "debug mode: ")
+        debug_on_label.place(x = 30, y = 30)
+
+        debug_on_button = tk.Button(self.debug_wn, text = "On", command = self.debug_on)
+        debug_on_button.place(x = 250, y = 30)
+
+        debug_off_button = tk.Button(self.debug_wn, text = "Off", command = self.debug_off)
+        debug_off_button.place(x = 380, y = 30)
+
+        debug_day_label = tk.Label(self.debug_wn, text = "final training day: ")
+        debug_day_label.place(x = 30, y = 90)
+
+        self.debug_day = tk.Entry(self.debug_wn, width = 30, state = tk.DISABLED)
+        self.debug_day.place(x = 200, y = 90)
+
+        debug_pred_label = tk.Label(self.debug_wn, text = "The day you want to predict: ")
+        debug_pred_label.place(x = 30, y = 120)
+
+        self.debug_pred_day = tk.Entry(self.debug_wn, width = 30, state = tk.DISABLED)
+        self.debug_pred_day.place(x = 200, y = 120)
+
+
+        debug_confirm = tk.Button(self.debug_wn, text = "confirm", height = 1, width = 7, command = self.debug_done)
+        debug_confirm.place(x = 410, y = 320)
+
+
+
+
+    def debug_checked(self, debug_var):
+        print(debug_var.get())
+
+
+    def main_screen(self):
+        self.wn.deiconify()
+
         self.wn.protocol("WM_DELETE_WINDOW", self.close_all)
+        self.wn.update()
         self.wn.mainloop()
 
 
@@ -129,10 +197,9 @@ class GUI_US:
         file_name = self.today + "_report.txt"
         report_file = open(file_name, 'w')
         for stock in self.report_data:
-            #print(stock)
             predict_data = self.report_data[stock]
-            data_today = web.DataReader(stock, data_source = 'yahoo', start = self.today, end = self.today).filter(['Close'])
-            today_close = str(data_today['Close'][0])
+            data_today = web.DataReader(stock, data_source = 'yahoo', start = "2020-01-01", end = self.today).filter(['Close'])
+            today_close = str(data_today['Close'][-1])
             avg = 0
             rng_avg = 0
             lease_avg = 0
@@ -156,7 +223,7 @@ class GUI_US:
 
 
     def run_clicked(self):
-        start_date = "2012-01-01"
+        start_date = "2015-01-01"
         file_name = self.today + "_log.txt"
         log_file = open(file_name, "w")
         self.wn.withdraw()
@@ -167,7 +234,6 @@ class GUI_US:
                 temp_report_data = []
                 for i in range(0, 5):
                     Brain = stock_model(stock_name, (start_date, self.today))
-                    #print(Brain.data)
                     Brain.create_brain()
                     while Brain.rmse >= 5:
                         print("rmse大于5， 重新训练:", Brain.rmse)
@@ -184,59 +250,56 @@ class GUI_US:
         msg.showinfo('Success', 'Your are going to be rich. ')
 
         log_file.close()
-        #print(self.report_data)
         self.wn.deiconify()
 
 
     def Add_clicked(self):
         self.wn.withdraw()
         self.Add_wn.deiconify()
-        self.Add_wn.title('Add Stock')
-        self.center(self.Add_wn, self.Add_width, self.Add_height)
-
-        Add_txt = tk.Entry(self.Add_wn, width = 30)
-        Add_txt.place(x = 30, y = 15)
-
-        Add_confirm = tk.Button(self.Add_wn, text = "confirm", height = 1, width = 7, command = lambda: self.add_stock(Add_txt))
-        Add_confirm.place(x = 260, y = 13)
 
         self.Add_wn.protocol("WM_DELETE_WINDOW", self.close_add)
         self.Add_wn.mainloop()
 
 
     def debug_clicked(self):
-        if self.today == str(date.today()):
-            self.wn.withdraw()
-            debug_wn = tk.Tk()
-            debug_wn.title('debug window')
-            self.center(debug_wn, 360, 60)
-            debug_day = tk.Entry(debug_wn, width = 30)
-            debug_day.place(x = 30, y = 15)
+        self.wn.withdraw()
+        self.debug_wn.deiconify()
 
-            debug_confirm = tk.Button(debug_wn, text = "confirm", height = 1, width = 7, command = lambda: self.debug_done(debug_wn, debug_day))
-            debug_confirm.place(x = 260, y = 13)
+        self.debug_wn.protocol("WM_DELETE_WINDOW", self.close_debug)
+        self.debug_wn.update()
+        self.debug_wn.mainloop()
 
-            debug_wn.mainloop()
+
+    def debug_on(self):
+        #print("debug on")
+        self.debug_flag = True
+        self.debug_day['state'] = tk.NORMAL
+        self.debug_pred_day['state'] = tk.NORMAL
+
+
+    def debug_off(self):
+        self.debug_flag = False
+        self.debug_day['state'] = tk.DISABLED
+        self.debug_pred_day['state'] = tk.DISABLED
+
+
+    def debug_done(self):#, debug_day):
+        if self.debug_flag:
+            self.today = self.debug_day.get()
+            self.pred_day = self.debug_pred_day.get()
+            msg.showinfo("debug info", "Enter debug mode")
+            self.debug_wn.withdraw()
+            self.wn.title('Stock Prodection(debug mode)')
         else:
-            self.today = str(date.today())
             msg.showinfo("debug info", "Exit debug mode")
             self.wn.title('Stock Prodection')
-
-    def debug_done(self, debug_wn, debug_day):
-        self.today = debug_day.get()
-        msg.showinfo("debug info", "Enter debug mode")
-        debug_wn.destroy()
-        debug_wn.quit()
-        self.wn.title('Stock Prodection(debug mode)')
         self.wn.deiconify()
-
 
     def add_stock(self, Add_txt):
         stock_name = str(Add_txt.get()).upper()
         try:
             df = web.DataReader(stock_name, data_source = 'yahoo')
             self.Add_wn.withdraw()
-            #self.Add_wn.destroy()
             if stock_name not in self.stock_list:
                 self.stock_list.append(stock_name)
                 msg.showinfo('Success', 'Successfully add stock into the list.')
@@ -247,7 +310,8 @@ class GUI_US:
             #print(e)
             msg.showinfo('Error', 'The name does not exist. ')
 
-        self.wn.update()
+        self.draw_checkbox()
+
         self.wn.deiconify()
 
 

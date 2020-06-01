@@ -11,7 +11,7 @@ from datetime import date
 
 
 
-class stock_model:
+class stock_model_latest:
 
     def __init__(self, stock_name, training_time_zone):
         self.stock_name = stock_name
@@ -23,9 +23,9 @@ class stock_model:
         de_scale_data = self.all_data.filter(['Close'])
         self.dataset = self.data.values
         de_scale_data = de_scale_data.values
-        self.training_data_len = math.ceil(len(self.dataset) * .8)
         self.x_train = []
         self.y_train = []
+        self.training_data_len = len(self.dataset)#math.ceil(len(self.dataset) * .8)
         self.scaler = MinMaxScaler(feature_range = (0, 1))
         self.de_scaler = MinMaxScaler(feature_range = (0, 1))
         self.scaled_data = self.scaler.fit_transform(self.dataset)
@@ -87,15 +87,15 @@ class stock_model:
         self.model.add(Dense(25))
         self.model.add(Dense(1))
 
-        self.model.compile(optimizer = 'adam', loss = 'mean_squared_error')
+        self.model.compile(optimizer = 'adam', loss = 'mean_squared_error', metrics = ['accuracy'])
 
-    def create_brain(self):
+    def create_brain(self, num_of_epoch):
         self.generate_train_data()
 
         self.generate_model()
 
-        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = self.epoch)
-        self.get_RMSE()
+        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = num_of_epoch)#self.epoch)
+        #self.get_RMSE()
 
 
     def get_RMSE(self):
@@ -158,7 +158,7 @@ class stock_model:
         #print("x_predict shape is :", x_predict.shape)
         self.pred_price = self.model.predict(x_predict)
         self.pred_price = self.de_scaler.inverse_transform(self.pred_price)[0][0]
-        #print(pred_price)
+        print(self.pred_price)
         print("Predict finish")
 
     def create_report(self):
@@ -169,6 +169,16 @@ class stock_model:
 
 
 if __name__ == "__main__":
-    x = stock_model('AAPL', ('2012-01-01', '2020-05-20'))
-    x.create_brain()
-    x.use_brain()
+    calculate = []
+    for i in range(0, 10):
+        x = stock_model_latest('GPRO', ('2018-01-01', '2020-05-28'))
+        x.create_brain(20)
+        x.use_brain()
+        calculate.append(x.pred_price)
+
+    calculate.remove(max(calculate))
+    calculate.remove(max(calculate))
+    calculate.remove(min(calculate))
+    calculate.remove(min(calculate))
+
+    print(sum(calculate)/6)
