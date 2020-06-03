@@ -26,18 +26,22 @@ class GUI_US:
         self.Add_wn.withdraw()
         self.debug_wn = tk.Tk()
         self.debug_wn.withdraw()
+        self.loading_wn = tk.Tk()
+        self.loading_wn.withdraw()
         self.select_all_var = tk.IntVar()
         self.clear_var = tk.IntVar()
         self.report_data = {}
         self.debug_flag = False
         self.pred_day = ''
+        self.loading_log_label = ''
+        self.loading_log_line = 'Start Predicting\n'
 
 
 
         self.draw_wn()
         self.draw_add_wn()
-        self.draw_debug_wn()
-
+        #self.draw_debug_wn()
+        self.draw_loading_wn()
         self.main_screen()
 
 
@@ -103,8 +107,8 @@ class GUI_US:
             self.dict_stock[box][0].deselect()
 
     def is_today_out(self):
-        temp = web.DataReader("F", data_source = 'yahoo', start = "2020-05-31", end = date.today())
-        return (str(date.today()) == str(temp.index[0])[:10])
+        temp = web.DataReader("AAPL", data_source = 'yahoo', start = "2020-05-31", end = date.today())
+        return (str(date.today()) == str(temp.index[-1])[:10])
 
     def draw_wn(self):
         self.wn.title('Stock Prodection')
@@ -134,15 +138,15 @@ class GUI_US:
         Run_buttom = tk.Button(self.wn, text = "Run", height = 2, width = 10, command = self.run_clicked)
         Run_buttom.place(x = 150, y = 280)
 
-        prodect_buttom = tk.Button(self.wn, text = "Prodect", height = 2, width = 10, command = self.prodect_clicked)
-        prodect_buttom.place(x = 250, y = 280)
+        self.prodect_buttom = tk.Button(self.wn, text = "Prodect", height = 2, width = 10, command = self.prodect_clicked)
+        self.prodect_buttom.place(x = 250, y = 280)
 
         setting_buttom = tk.Button(self.wn, text = 'debug', height = 2, width = 10, command = self.debug_clicked)#"Setting", height = 2, width = 10)
         setting_buttom.place(x = 350, y = 280)
-
+        '''
         debug_buttom = tk.Button(self.wn, text = "debug", height = 1, width = 5, command = self.debug_clicked)
         debug_buttom.place(x = 400, y = 400)
-
+        '''
 
 
     def draw_add_wn(self):
@@ -191,9 +195,16 @@ class GUI_US:
 
 
 
-
     def debug_checked(self, debug_var):
         print(debug_var.get())
+
+
+    def draw_loading_wn(self):
+        self.center(self.loading_wn, self.wn_width, self.wn_height)
+        self.loading_wn.title("Running")
+
+        self.loading_log_label = tk.Label(self.loading_wn, text = self.loading_log_line, bg = "White")
+        self.loading_log_label.place(x = 2, y = 5)
 
 
     def main_screen(self):
@@ -209,55 +220,74 @@ class GUI_US:
         report_file = open(file_name, 'w')
         for stock in self.report_data:
             predict_data = self.report_data[stock]
-            data_today = web.DataReader(stock, data_source = 'yahoo', start = "2020-05-01", end = self.today).filter(['Close'])
+            data_today = web.DataReader(stock, data_source = 'yahoo', start = "2020-06-01", end = self.today).filter(['Close'])
             today_close = str(data_today['Close'][-1])
             avg = self.avg_output(predict_data)
-            line = stock + ": " + today_close + "\n\tavg: " + str(avg) + "\n" # + "\n\tRange_avg: " + rng_avg + "\n\tlease_avg: " + lease_avg + "\n\tmax_avg: " + max_avg + "\n"
+            mid = self.mid_output(predict_data)
+            diff = avg - mid
+            line = stock + ": " + today_close + "\n\tavg: " + str(avg) + "\n\tmid: " + str(mid) + "\n\tdiff: " + str(diff) + "\n" # "\n\tmax_avg: " + max_avg + "\n"
             report_file.write(line)
             report_file.write("\n")
         report_file.close()
+        self.prodect_buttom['state'] = tk.DISABLED
 
 
 
     def avg_output(self, predict_data):
-        predict_data.remove(max(predict_data))
-        predict_data.remove(max(predict_data))
-        predict_data.remove(min(predict_data))
-        predict_data.remove(min(predict_data))
+        predict_data.sort()
+        return (sum(predict_data[2:-2])/6)
 
-        return (sum(predict_data)/6)
+    def mid_output(self, predict_data):
+        predict_data.sort()
+        return predict_data[4]
 
     def run_clicked(self):
         self.wn.withdraw()
+
+        msg.showinfo("Program start", "开始预测")
+        self.loading_wn.deiconify()
+
+        self.loading_wn.after(500, self.main_logic_brain_create)
+        self.loading_wn.update()
+        self.loading_wn.mainloop()
+        #msg.showinfo('Success', 'Your are going to be rich. ')
+
+
+        #self.wn.deiconify()
+
+    def main_logic_brain_create(self):
         start_date = "2018-01-01"
         file_name = self.today + "_log.txt"
         log_file = open(file_name, "w")
-
-        msg.showinfo("Program start", "开始预测")
         for stock_name in self.stock_list:
             if(self.dict_stock[stock_name][1].get() == 1):
-                print("now running: " + stock_name)
+                temp = "now running: " + stock_name
+                self.loading_log_line += temp + "\n"
+                self.loading_log_label.configure(text = self.loading_log_line)
+                self.loading_wn.update()
                 temp_report_data = []
                 for i in range(0, 10):
                     Brain = sml(stock_name, (start_date, self.today))
                     Brain.create_brain()
-                    '''
-                    while Brain.rmse >= 5:
-                        print("rmse大于5， 重新训练:", Brain.rmse)
-                        Brain = stock_model(stock_name, (start_date, self.today))
-                        Brain.create_brain()
-                    '''
+                    self.loading_log_line += "\nBrain " + str(i+1) + " finished. "
+                    self.loading_log_label.configure(text = self.loading_log_line)
+                    self.loading_wn.update()
                     Brain.use_brain()
+                    self.loading_log_line += "Predict finished."
+                    self.loading_log_label.configure(text = self.loading_log_line)
+                    self.loading_wn.update()
                     report_line = Brain.create_report()
                     log_file.write(report_line)
                     log_file.write("\n")
                     temp_report_data.append(Brain.pred_price)
                 log_file.write('\n')
+                self.loading_log_line += "\n\n"
+                self.loading_log_label.configure(text = self.loading_log_line)
+                self.loading_wn.update()
                 self.report_data[stock_name] = temp_report_data
-
-        msg.showinfo('Success', 'Your are going to be rich. ')
-
         log_file.close()
+        self.loading_wn.withdraw()
+        self.loading_wn.destroy()
         self.wn.deiconify()
 
 

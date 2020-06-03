@@ -94,7 +94,7 @@ class stock_model:
 
         self.generate_model()
 
-        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = self.epoch)
+        self.model.fit(self.x_train, self.y_train, batch_size = 1, epochs = 1)#self.epoch)
         self.get_RMSE()
 
 
