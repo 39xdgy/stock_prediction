@@ -25,10 +25,75 @@ import pandas_datareader as web
 from datetime import date
 import tkinter as tk
 import time
-from stock_model import stock_model as sm
-x = web.DataReader("F", data_source = 'yahoo', start = "2020-05-31", end = date.today())
+from stock_model_latest import stock_model_latest as sml
+#x = web.DataReader("F", data_source = 'yahoo', start = "2020-05-31", end = date.today())
 #print(x)
 #print(str(date.today()) == str(x.index[0])[:10])
+
+
+calculate = []
+file = open("find_best_model.txt", 'r')
+
+batch_num = 1
+epoch_num = 25
+learning_len = [15, 30, 60, 90, 120, 150, 180]
+
+x = sml('LYFT', ('2018-06-01', '2020-06-08'), (1, 20, 60))
+currect_ans = x.dataset[-1][0]
+
+ans = []
+check = []
+for line in file:
+    list_line = line.split("\t")
+    pred_out = list_line[3][8:-1]
+    d_out = float(pred_out)
+    list_line[3] = d_out
+    diff = currect_ans - d_out
+    if diff < 0: diff = -diff
+    if diff <= 3:
+        check.append(list_line)
+        ans.append(diff)
+
+#print(ans)
+#print(check)
+sorted_ans = sorted(ans)
+
+for i in sorted_ans:
+    print(i)
+    print(check[ans.index(i)])
+
+
+
+
+
+
+
+'''
+
+for data_len in learning_len:
+    for i in range(0, 10):
+        x = sml('LYFT', ('2018-01-01', '2020-06-07'), (1, 25, data_len))
+        x.create_brain()
+        x.use_brain()
+        line = "batch: " + str(1) + "\tepoch: " + str(25) + "\tlearning_len: "+ str(data_len) + "\toutput: " + str(x.pred_price) + "\n"
+        file.write(line)
+
+file.close()
+
+
+
+'''
+
+
+
+
+
+
+
+
+
+
+
 
 
 class window:
@@ -114,5 +179,3 @@ class window:
         self.wn1.destroy()
         self.wn2.destroy()
         self.wn3.destroy()
-
-x = window()

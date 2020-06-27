@@ -5,7 +5,7 @@ import pandas_datareader as web
 from datetime import date
 from stock_model_latest import stock_model_latest as sml
 
-class GUI_US:
+class GUI:
 
     def __init__(self):
         self.wn_width = 480
@@ -33,7 +33,7 @@ class GUI_US:
         self.report_data = {}
         self.debug_flag = False
         self.pred_day = ''
-        self.loading_log_label = ''
+        self.loading_log_listbox = ''
         self.loading_log_line = 'Start Predicting\n'
 
 
@@ -42,7 +42,7 @@ class GUI_US:
         self.draw_add_wn()
         #self.draw_debug_wn()
         self.draw_loading_wn()
-        self.main_screen()
+        #self.main_screen()
 
 
     def update_stock_list(self):
@@ -92,11 +92,11 @@ class GUI_US:
                 checkbox_x += 1
 
 
-    def select_all_checked(self):
+    def select_all_checked(self, auto = False):
         print(self.select_all_var.get())
-
+        temp_auto = auto
         for box in self.dict_stock:
-            if self.select_all_var.get() == 1:
+            if self.select_all_var.get() == 1 or temp_auto:
                 self.dict_stock[box][0].select()
             else:
                 self.dict_stock[box][0].deselect()
@@ -143,10 +143,10 @@ class GUI_US:
 
         setting_buttom = tk.Button(self.wn, text = 'debug', height = 2, width = 10, command = self.debug_clicked)#"Setting", height = 2, width = 10)
         setting_buttom.place(x = 350, y = 280)
-        '''
-        debug_buttom = tk.Button(self.wn, text = "debug", height = 1, width = 5, command = self.debug_clicked)
-        debug_buttom.place(x = 400, y = 400)
-        '''
+
+        debug_buttom = tk.Button(self.wn, text = "model_data", height = 1, width = 10, command = self.debug_clicked)
+        debug_buttom.place(x = 395, y = 330)
+
 
 
     def draw_add_wn(self):
@@ -203,8 +203,12 @@ class GUI_US:
         self.center(self.loading_wn, self.wn_width, self.wn_height)
         self.loading_wn.title("Running")
 
-        self.loading_log_label = tk.Label(self.loading_wn, text = self.loading_log_line, bg = "White")
-        self.loading_log_label.place(x = 2, y = 5)
+        self.loading_log_scroll = tk.Scrollbar(self.loading_wn)
+        self.loading_log_scroll.pack(side = tk.RIGHT, fill = tk.Y)
+
+
+        self.loading_log_listbox = tk.Listbox(self.loading_wn, bg = "White", yscrollcommand = self.loading_log_scroll.set, width = 75, height = 21)
+        self.loading_log_listbox.place(x = 2, y = 5)
 
 
     def main_screen(self):
@@ -259,31 +263,25 @@ class GUI_US:
         start_date = "2018-01-01"
         file_name = self.today + "_log.txt"
         log_file = open(file_name, "w")
+        self.loading_log_listbox.insert(tk.END, "Start Predicting")
+        self.loading_log_scroll.config(command = self.loading_log_listbox.yview)
+        self.loading_wn.update()
         for stock_name in self.stock_list:
             if(self.dict_stock[stock_name][1].get() == 1):
                 temp = "now running: " + stock_name
-                self.loading_log_line += temp + "\n"
-                self.loading_log_label.configure(text = self.loading_log_line)
+                self.loading_log_listbox.insert(tk.END, temp)
+                self.loading_log_scroll.config(command = self.loading_log_listbox.yview)
                 self.loading_wn.update()
                 temp_report_data = []
                 for i in range(0, 10):
-                    Brain = sml(stock_name, (start_date, self.today))
+                    Brain = sml(stock_name, (start_date, self.today), (6, 28, 120))
                     Brain.create_brain()
-                    self.loading_log_line += "\nBrain " + str(i+1) + " finished. "
-                    self.loading_log_label.configure(text = self.loading_log_line)
-                    self.loading_wn.update()
                     Brain.use_brain()
-                    self.loading_log_line += "Predict finished."
-                    self.loading_log_label.configure(text = self.loading_log_line)
-                    self.loading_wn.update()
                     report_line = Brain.create_report()
                     log_file.write(report_line)
                     log_file.write("\n")
                     temp_report_data.append(Brain.pred_price)
                 log_file.write('\n')
-                self.loading_log_line += "\n\n"
-                self.loading_log_label.configure(text = self.loading_log_line)
-                self.loading_wn.update()
                 self.report_data[stock_name] = temp_report_data
         log_file.close()
         self.loading_wn.withdraw()
@@ -353,4 +351,6 @@ class GUI_US:
         self.wn.deiconify()
 
 
-x = GUI_US()
+if __name__ == "__main__":
+    x = GUI()
+    x.main_screen()
