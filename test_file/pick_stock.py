@@ -4,10 +4,10 @@ from datetime import date
 import time
 #https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download
 
-file_path = ".\companylist.csv"
+file_path = "..\csv_file\companylist.csv"
 
 wb = open(file_path, 'r')
-pick_file = open('pick_file.txt', 'w')
+pick_file = open('..\\txt_file\pick_file.txt', 'w')
 title = wb.readline()
 first = wb.readline()
 '''

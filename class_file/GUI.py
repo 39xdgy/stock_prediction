@@ -46,7 +46,7 @@ class GUI:
 
 
     def update_stock_list(self):
-        stock_list_file = open("stock_list.txt", "w")
+        stock_list_file = open("..\\txt_file\stock_list.txt", "w")
         for stock in self.stock_list:
             line = stock + "\n"
             stock_list_file.write(line)
