@@ -15,7 +15,7 @@ class GUI:
 
         self.today = str(date.today())
         self.finish = False
-        stock_list_file = open("stock_list.txt", "r")
+        stock_list_file = open("..\\txt_file\stock_list.txt", "r")
         self.stock_list = stock_list_file.read().split("\n")
         self.stock_list.remove('')
         stock_list_file.close()
@@ -220,7 +220,7 @@ class GUI:
 
 
     def prodect_clicked(self):
-        file_name = self.today + "_report.txt"
+        file_name = "..\\txt_file\\" + self.today + "_report.txt"
         report_file = open(file_name, 'w')
         for stock in self.report_data:
             predict_data = self.report_data[stock]
@@ -261,7 +261,7 @@ class GUI:
 
     def main_logic_brain_create(self):
         start_date = "2018-01-01"
-        file_name = self.today + "_log.txt"
+        file_name = "..\\txt_file\\" + self.today + "_log.txt"
         log_file = open(file_name, "w")
         self.loading_log_listbox.insert(tk.END, "Start Predicting")
         self.loading_log_scroll.config(command = self.loading_log_listbox.yview)
@@ -274,7 +274,7 @@ class GUI:
                 self.loading_wn.update()
                 temp_report_data = []
                 for i in range(0, 10):
-                    Brain = sml(stock_name, (start_date, self.today), (6, 28, 120))
+                    Brain = sml(stock_name, (start_date, self.today), (1, 20, 60), 'Close')#, 'Close')
                     Brain.create_brain()
                     Brain.use_brain()
                     report_line = Brain.create_report()

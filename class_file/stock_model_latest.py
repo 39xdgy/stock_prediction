@@ -14,12 +14,13 @@ import time
 
 class stock_model_latest:
 
-    def __init__(self, stock_name, training_time_zone, model_data):
+    def __init__(self, stock_name, training_time_zone, model_data, train_title):
         self.stock_name = stock_name
         self.start_time, self.end_time = training_time_zone
         self.all_data = web.DataReader(self.stock_name, data_source = 'yahoo', start = self.start_time, end = self.end_time)
         self.batch_num, self.epoch_num, self.learning_len = model_data
-        self.data = self.all_data.filter(['High', 'Low', 'Open', 'Close'])
+        self.train_title = train_title
+        self.data = self.all_data.filter([self.train_title])
         self.dataset = self.data.values
         self.x_train = []
         self.y_train = []
@@ -60,17 +61,17 @@ class stock_model_latest:
         self.len_train_data = len(self.x_train)
         self.x_train, self.y_train = np.array(self.x_train), np.array(self.y_train)
 
-        self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], self.x_train.shape[1], 4))
+        self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], self.x_train.shape[1], 1))
 
 
 
     def generate_model(self):
 
         self.model = Sequential()
-        self.model.add(LSTM(200, return_sequences = True, input_shape = (self.x_train.shape[1], 4)))
+        self.model.add(LSTM(200, return_sequences = True, input_shape = (self.x_train.shape[1], 1)))
         self.model.add(LSTM(200, return_sequences = False))
         self.model.add(Dense(130))
-        self.model.add(Dense(4))
+        self.model.add(Dense(1))
 
         self.model.compile(optimizer = 'adam', loss = 'mean_squared_error', metrics = ['accuracy'])
 
@@ -134,13 +135,13 @@ class stock_model_latest:
         x_predict = []
         x_predict.append(last_60_days_scaled)
         x_predict = np.array(x_predict)
-        x_predict = np.reshape(x_predict, (1, x_predict.shape[1], 4))
+        x_predict = np.reshape(x_predict, (x_predict.shape[0], x_predict.shape[1], 1))
         #print("x_predict shape is :", x_predict.shape)
         self.pred_price = self.model.predict(x_predict)
         self.pred_price = self.scaler.inverse_transform(self.pred_price)
 
     def create_report(self):
-        pred_price_str = "Predicted price: " + str(self.pred_price) + "."
+        pred_price_str = "Predicted price for {}: ".format(self.train_title) + str(self.pred_price) + "."
         #range_str = "Range: +- "+ str(self.rmse) + "."
         final = self.stock_name + " " + pred_price_str# + range_str
         return final
