@@ -141,7 +141,7 @@ class stock_model_latest:
         self.pred_price = self.scaler.inverse_transform(self.pred_price)
 
     def create_report(self):
-        pred_price_str = "Predicted price for {}: ".format(self.train_title) + str(self.pred_price) + "."
+        pred_price_str = "Predicted price for {}: ".format(self.train_title) + str(self.pred_price[0, 0]) + "."
         #range_str = "Range: +- "+ str(self.rmse) + "."
         final = self.stock_name + " " + pred_price_str# + range_str
         return final

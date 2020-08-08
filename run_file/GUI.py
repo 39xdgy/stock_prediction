@@ -224,12 +224,13 @@ class GUI:
         report_file = open(file_name, 'w')
         for stock in self.report_data:
             predict_data = self.report_data[stock]
-            data_today = web.DataReader(stock, data_source = 'yahoo', start = "2020-06-01", end = self.today).filter(['Close'])
-            today_close = str(data_today['Close'][-1])
+            stock, filter_area = stock.split('_')
+            data_today = web.DataReader(stock, data_source = 'yahoo', start = "2020-07-01", end = self.today).filter([filter_area])
+            today_data = str(data_today[filter_area][-1])
             avg = self.avg_output(predict_data)
             mid = self.mid_output(predict_data)
             diff = avg - mid
-            line = stock + ": " + today_close + "\n\tavg: " + str(avg) + "\n\tmid: " + str(mid) + "\n\tdiff: " + str(diff) + "\n" # "\n\tmax_avg: " + max_avg + "\n"
+            line = stock + "_" + filter_area + ": " + today_data + "\n\tavg: " + str(avg) + "\n\tmid: " + str(mid) + "\n\tdiff: " + str(diff) + "\n" # "\n\tmax_avg: " + max_avg + "\n"
             report_file.write(line)
             report_file.write("\n")
         report_file.close()
@@ -274,15 +275,28 @@ class GUI:
                 self.loading_wn.update()
                 temp_report_data = []
                 for i in range(0, 10):
+                    Brain = sml(stock_name, (start_date, self.today), (1, 20, 60), 'Low')#, 'Close')
+                    Brain.create_brain()
+                    Brain.use_brain()
+                    report_line = Brain.create_report()
+                    log_file.write(report_line)
+                    log_file.write("\n")
+                    temp_report_data.append(Brain.pred_price[0, 0])
+                log_file.write('\n')
+                save_name = stock_name + "_Low"
+                self.report_data[save_name] = temp_report_data
+                temp_report_data = []
+                for i in range(0, 10):
                     Brain = sml(stock_name, (start_date, self.today), (1, 20, 60), 'Close')#, 'Close')
                     Brain.create_brain()
                     Brain.use_brain()
                     report_line = Brain.create_report()
                     log_file.write(report_line)
                     log_file.write("\n")
-                    temp_report_data.append(Brain.pred_price)
+                    temp_report_data.append(Brain.pred_price[0, 0])
                 log_file.write('\n')
-                self.report_data[stock_name] = temp_report_data
+                save_name = stock_name + "_Close"
+                self.report_data[save_name] = temp_report_data
         log_file.close()
         self.loading_wn.withdraw()
         self.loading_wn.destroy()

@@ -11,8 +11,14 @@ class pick_stock_tool:
         self.info_list = info_list
         self.check_list = check_list
         self.last_date = str(self.stock.index[-1])[:10]
+        #print(self.stock)
         for info in self.info_list:
             self.stock[info] = stockStat[[info]]
+
+    def volume_check(self, miniumn_number):
+        last_volumn = self.stock.loc[self.last_date]['volume']
+        if last_volumn <= miniumn_number: return False
+        return True
 
 
     def check_today_kdjj(self, flag = 5):
@@ -133,4 +139,5 @@ class pick_stock_tool:
 x = pick_stock_tool('AAPL', ('2018-01-01', '2020-01-01'), ['macd', 'macds', 'macdh', 'kdjk', 'kdjd', 'kdjj', 'rsi_6', 'rsi_12', 'rsi_14'], ['macdh', 'kdjj', 'rsi_6'])
 x.check_today_kdjj()
 x.accurate_kdjj()
+print(x.volume_check(500000))
 '''

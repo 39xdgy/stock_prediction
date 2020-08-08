@@ -3,7 +3,7 @@ import stockstats
 from datetime import date
 import time
 
-file_path = ".\companylist.csv"
+file_path = "..\csv_file\companylist.csv"
 
 wb = open(file_path, 'r')
 pick_file = open('pick_file.txt', 'w')
@@ -24,9 +24,14 @@ for line in wb:
     #print(list_all[0])
     try:
         stock = web.DataReader(list_all[0], data_source = 'yahoo', start = '2018-01-01', end = '2020-06-26')
+        #print(stock)
     except:
         print(list_all[0])
         continue
+    '''
+    if stock.loc[-1]['volumn'] <= 500000:
+        continue
+    '''
     stockStat = stockstats.StockDataFrame.retype(stock)
     info_list = ['macd', 'macds', 'macdh', 'kdjk', 'kdjd', 'kdjj', 'rsi_6', 'rsi_12', 'rsi_14']
     stockStat = stockStat[info_list]

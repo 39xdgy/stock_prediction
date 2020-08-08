@@ -22,7 +22,6 @@ title = wb.readline()
 start = time.time()
 doesnot_work_count = 0
 total_stock = 0
-
 begin_time = '2018-01-01'
 test_time = '2020-06-27'
 info_list = ['macd', 'macds', 'macdh', 'kdjk', 'kdjd', 'kdjj', 'rsi_6', 'rsi_12', 'rsi_14']
@@ -30,7 +29,7 @@ info_list = ['macd', 'macds', 'macdh', 'kdjk', 'kdjd', 'kdjj', 'rsi_6', 'rsi_12'
 
 check_list = ['macdh', 'kdjj', 'rsi_6']
 
-min_precentage = 70
+min_precentage = 60
 for line in wb:
     list_all = line.split("\"")
     list_all = [e for e in list_all if e not in ('', ',')]
@@ -45,7 +44,7 @@ for line in wb:
     except:
         continue
     if len(stock.stock.index) <= 50: continue
-
+    if not stock.volume_check(500000): continue
 
     total_stock += 1
     write_first = True
